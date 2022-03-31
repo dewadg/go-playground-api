@@ -3,7 +3,11 @@ type Query {
 }
 
 type Mutation {
-  execute(content: String!): ExecutionResponse!
+  execute(payload: ExecutionRequest!): ExecutionResponse!
+}
+
+input ExecutionRequest {
+  input: [String!]!
 }
 
 type ExecutionResponse {

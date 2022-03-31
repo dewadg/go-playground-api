@@ -1,4 +1,4 @@
-package inhouse
+package executor
 
 import (
 	"context"
@@ -6,37 +6,35 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/dewadg/go-playground-api/internal/executor"
 )
 
-func Test_createExecutor(t *testing.T) {
+func Test_createInhouseExecutor(t *testing.T) {
 	type args struct {
-		cfg     *config
+		cfg     *inhouseConfig
 		ctx     context.Context
-		payload func() executor.ExecutePayload
+		payload func() ExecutePayload
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
-		want    executor.ExecuteResult
+		want    ExecuteResult
 	}{
 		{
 			name: "success",
 			args: args{
-				cfg: &config{
+				cfg: &inhouseConfig{
 					tempDir: "./__tests__",
 				},
 				ctx: context.Background(),
-				payload: func() executor.ExecutePayload {
+				payload: func() ExecutePayload {
 					file, err := ioutil.ReadFile("./golden/main.example")
 					if err != nil {
 						t.Fatal(err)
 					}
 
 					splitLineFile := strings.Split(string(file), "\n")
-					payload := executor.ExecutePayload{
+					payload := ExecutePayload{
 						Input: make([]string, len(splitLineFile)),
 					}
 
@@ -48,7 +46,7 @@ func Test_createExecutor(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			want: executor.ExecuteResult{
+			want: ExecuteResult{
 				Output: []string{
 					"Hello, world!",
 				},
@@ -57,7 +55,7 @@ func Test_createExecutor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := createExecutor(tt.args.cfg)(tt.args.ctx, tt.args.payload())
+			got, err := createInhouseExecutor(tt.args.cfg)(tt.args.ctx, tt.args.payload())
 			if (err != nil) && !tt.wantErr {
 				t.Errorf("createExecutor() error = %v", err)
 			}

@@ -1,4 +1,4 @@
-package inhouse
+package executor
 
 import (
 	"context"
@@ -8,26 +8,24 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"strings"
-
-	"github.com/dewadg/go-playground-api/internal/executor"
 )
 
-func New(cfgFuncs ...Configurator) executor.Executor {
-	cfg := config{}
+func NewInhouse(cfgFuncs ...InhouseConfigurator) func(context.Context, ExecutePayload) (ExecuteResult, error) {
+	cfg := inhouseConfig{}
 	for _, f := range cfgFuncs {
 		f(&cfg)
 	}
 
-	return createExecutor(&cfg)
+	return createInhouseExecutor(&cfg)
 }
 
-func createExecutor(cfg *config) executor.Executor {
-	return func(ctx context.Context, payload executor.ExecutePayload) (executor.ExecuteResult, error) {
+func createInhouseExecutor(cfg *inhouseConfig) func(context.Context, ExecutePayload) (ExecuteResult, error) {
+	return func(ctx context.Context, payload ExecutePayload) (ExecuteResult, error) {
 		file := []byte(strings.Join(payload.Input, "\n"))
 
 		err := ioutil.WriteFile(cfg.tempDir+"/main.go", file, fs.ModePerm)
 		if err != nil {
-			return executor.ExecuteResult{}, err
+			return ExecuteResult{}, err
 		}
 
 		cmd := exec.CommandContext(ctx, "go", "run", "main.go")
@@ -35,40 +33,40 @@ func createExecutor(cfg *config) executor.Executor {
 
 		stderr, err := cmd.StderrPipe()
 		if err != nil {
-			return executor.ExecuteResult{}, err
+			return ExecuteResult{}, err
 		}
 		defer stderr.Close()
 
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
-			return executor.ExecuteResult{}, err
+			return ExecuteResult{}, err
 		}
 		defer stdout.Close()
 
 		if err = cmd.Start(); err != nil {
-			return executor.ExecuteResult{}, err
+			return ExecuteResult{}, err
 		}
 
 		errBytes, err := io.ReadAll(stderr)
 		if err != nil {
-			return executor.ExecuteResult{}, err
+			return ExecuteResult{}, err
 		}
 
 		outputBytes, err := io.ReadAll(stdout)
 		if err != nil {
-			return executor.ExecuteResult{}, err
+			return ExecuteResult{}, err
 		}
 
 		if err = cmd.Wait(); err != nil {
-			return executor.ExecuteResult{}, err
+			return ExecuteResult{}, err
 		}
 
 		if len(errBytes) > 0 {
-			return executor.ExecuteResult{}, errors.New(string(errBytes))
+			return ExecuteResult{}, errors.New(string(errBytes))
 		}
 
 		outputStringLines := strings.Split(string(outputBytes), "\n")
-		result := executor.ExecuteResult{
+		result := ExecuteResult{
 			Output: make([]string, 0),
 		}
 
