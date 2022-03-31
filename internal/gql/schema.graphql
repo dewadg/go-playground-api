@@ -1,3 +1,11 @@
 type Query {
   ping: String!
 }
+
+type Mutation {
+  execute(content: String!): ExecutionResponse!
+}
+
+type ExecutionResponse {
+  output: [String!]!
+}

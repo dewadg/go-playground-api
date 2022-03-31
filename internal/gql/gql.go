@@ -15,7 +15,7 @@ var schemaString string
 func Register(router chi.Router) error {
 	r := resolver.New()
 
-	schema, err := graphql.ParseSchema(schemaString, r)
+	schema, err := graphql.ParseSchema(schemaString, r, graphql.UseFieldResolvers())
 	if err != nil {
 		return err
 	}
