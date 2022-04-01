@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func NewInhouse(cfgFuncs ...InhouseConfigurator) func(context.Context, ExecutePayload) (ExecuteResult, error) {
+func NewInhouse(cfgFuncs ...InhouseConfigurator) Executor {
 	cfg := inhouseConfig{}
 	for _, f := range cfgFuncs {
 		f(&cfg)
@@ -19,7 +19,7 @@ func NewInhouse(cfgFuncs ...InhouseConfigurator) func(context.Context, ExecutePa
 	return createInhouseExecutor(&cfg)
 }
 
-func createInhouseExecutor(cfg *inhouseConfig) func(context.Context, ExecutePayload) (ExecuteResult, error) {
+func createInhouseExecutor(cfg *inhouseConfig) Executor {
 	return func(ctx context.Context, payload ExecutePayload) (ExecuteResult, error) {
 		file := []byte(strings.Join(payload.Input, "\n"))
 
