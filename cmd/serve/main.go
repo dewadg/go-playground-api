@@ -6,11 +6,16 @@ import (
 
 	"github.com/dewadg/go-playground-api/internal/gql"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	router := chi.NewRouter()
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
+	}))
 
 	if err := gql.Register(router); err != nil {
 		logrus.WithError(err).Fatal("failed to register gql handler")
