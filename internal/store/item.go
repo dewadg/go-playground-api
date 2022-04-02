@@ -32,7 +32,7 @@ func CreateItem(ctx context.Context, payload CreateItemRequest) (CreateItemRespo
 		return CreateItemResponse{}, err
 	}
 
-	query := `UPDATE items SET data = ?, updated_at = NOW() WHERE id = ?`
+	query := `UPDATE items SET data = ?, updated_at = NOW(), assigned_at = NOW() WHERE id = ?`
 	_, err = db.ExecContext(ctx, query, string(payloadBytes), id)
 	if err != nil {
 		return CreateItemResponse{}, err
