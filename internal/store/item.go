@@ -49,6 +49,15 @@ type Item struct {
 }
 
 func FindItem(ctx context.Context, id string) (Item, error) {
+	item, err := findItemFromMysql(ctx, id)
+	if err != nil {
+		return Item{}, err
+	}
+
+	return item, nil
+}
+
+func findItemFromMysql(ctx context.Context, id string) (Item, error) {
 	db, err := adapter.GetMysqlDB()
 	if err != nil {
 		return Item{}, err
