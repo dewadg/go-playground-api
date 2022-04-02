@@ -42,3 +42,31 @@ func CreateItem(ctx context.Context, payload CreateItemRequest) (CreateItemRespo
 		ShareID: id,
 	}, nil
 }
+
+type Item struct {
+	ID    string
+	Input []string
+}
+
+func FindItem(ctx context.Context, id string) (Item, error) {
+	db, err := adapter.GetMysqlDB()
+	if err != nil {
+		return Item{}, err
+	}
+
+	query := `SELECT data FROM items WHERE id = ? LIMIT 1`
+
+	var dataBytes []byte
+	if err = db.QueryRowContext(ctx, query, id).Scan(&dataBytes); err != nil {
+		return Item{}, err
+	}
+
+	var item Item
+	if err = json.Unmarshal(dataBytes, &item); err != nil {
+		return Item{}, err
+	}
+
+	item.ID = id
+
+	return item, nil
+}

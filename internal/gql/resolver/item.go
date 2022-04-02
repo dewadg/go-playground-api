@@ -27,3 +27,20 @@ func (r *resolver) CreateItem(ctx context.Context, args struct{ Payload CreateIt
 		ShareID: graphql.ID(result.ShareID),
 	}, nil
 }
+
+type Item struct {
+	ID    graphql.ID
+	Input []string
+}
+
+func (r *resolver) Item(ctx context.Context, args struct{ ID graphql.ID }) (Item, error) {
+	item, err := store.FindItem(ctx, string(args.ID))
+	if err != nil {
+		return Item{}, err
+	}
+
+	return Item{
+		ID:    graphql.ID(item.ID),
+		Input: item.Input,
+	}, nil
+}

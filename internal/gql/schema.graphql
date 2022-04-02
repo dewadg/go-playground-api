@@ -1,5 +1,7 @@
 type Query {
   ping: String!
+
+  item(id: ID!): Item!
 }
 
 type Mutation {
@@ -22,4 +24,9 @@ input CreateItemRequest {
 
 type CreateItemResponse {
   shareId: ID!
+}
+
+type Item {
+  id: ID!
+  input: [String!]!
 }
