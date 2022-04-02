@@ -39,7 +39,7 @@ func generateIDs(numOfIDs int, length int) []string {
 }
 
 func SeedIDs(ctx context.Context) error {
-	db, err := adapter.GetMyqslDB()
+	db, err := adapter.GetMysqlDB()
 	if err != nil {
 		return err
 	}
@@ -76,4 +76,20 @@ func SeedIDs(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+func popID(ctx context.Context) (string, error) {
+	db, err := adapter.GetMysqlDB()
+	if err != nil {
+		return "", err
+	}
+
+	query := `SELECT id FROM items ORDER BY updated_at ASC LIMIT 1`
+
+	var id string
+	if err = db.QueryRowContext(ctx, query).Scan(&id); err != nil {
+		return "", err
+	}
+
+	return id, nil
 }

@@ -4,6 +4,8 @@ type Query {
 
 type Mutation {
   execute(payload: ExecutionRequest!): ExecutionResponse!
+
+  createItem(payload: CreateItemRequest!): CreateItemResponse!
 }
 
 input ExecutionRequest {
@@ -12,4 +14,12 @@ input ExecutionRequest {
 
 type ExecutionResponse {
   output: [String!]!
+}
+
+input CreateItemRequest {
+  input: [String!]!
+}
+
+type CreateItemResponse {
+  shareId: ID!
 }

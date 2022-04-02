@@ -12,7 +12,7 @@ import (
 var mysqlOnce sync.Once
 var mysqlDB *sql.DB
 
-func GetMyqslDB() (*sql.DB, error) {
+func GetMysqlDB() (*sql.DB, error) {
 	var err error
 	mysqlOnce.Do(func() {
 		mysqlDB, err = ConnectMysql(os.Getenv("MYSQL_DSN"))
