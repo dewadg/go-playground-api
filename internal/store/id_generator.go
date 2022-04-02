@@ -84,7 +84,7 @@ func popID(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	query := `SELECT id FROM items ORDER BY updated_at ASC LIMIT 1`
+	query := `SELECT id FROM items WHERE assigned_at IS NULL ORDER BY updated_at ASC LIMIT 1`
 
 	var id string
 	if err = db.QueryRowContext(ctx, query).Scan(&id); err != nil {
