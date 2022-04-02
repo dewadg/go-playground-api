@@ -3,9 +3,10 @@ package store
 import (
 	"context"
 	"database/sql"
-	"github.com/dewadg/go-playground-api/internal/adapter"
 	"math/rand"
 	"time"
+
+	"github.com/dewadg/go-playground-api/internal/adapter"
 )
 
 var allowedChars = []rune("abcdefghijklmnopqrstuvwxyz1234567890")
