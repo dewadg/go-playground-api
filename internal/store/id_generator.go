@@ -1,7 +1,9 @@
 package store
 
 import (
+	"context"
 	"math/rand"
+	"time"
 )
 
 var allowedChars = []rune("abcdefghijklmnopqrstuvwxyz1234567890")
@@ -10,6 +12,7 @@ func generateIDs(numOfIDs int, length int) []string {
 	reservedIDs := make([]string, 0)
 	reservedIDsTracker := make(map[string]bool)
 
+	rand.Seed(time.Now().UnixNano())
 	generateID := func() string {
 		id := make([]rune, length)
 		for i := range id {
