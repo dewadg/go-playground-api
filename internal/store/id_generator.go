@@ -2,6 +2,8 @@ package store
 
 import (
 	"context"
+	"database/sql"
+	"github.com/dewadg/go-playground-api/internal/adapter"
 	"math/rand"
 	"time"
 )
@@ -33,4 +35,44 @@ func generateIDs(numOfIDs int, length int) []string {
 	}
 
 	return reservedIDs
+}
+
+func SeedIDs(ctx context.Context) error {
+	db, err := adapter.GetMyqslDB()
+	if err != nil {
+		return err
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	query := `
+			INSERT INTO
+				items
+			SET
+				id = ?,
+				created_at = NOW(),
+				updated_at = NOW()
+		`
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	ids := generateIDs(1000, 5)
+	for _, id := range ids {
+		_, err = stmt.ExecContext(ctx, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
 }
