@@ -3,8 +3,10 @@ package store
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/dewadg/go-playground-api/internal/adapter"
+	"github.com/sirupsen/logrus"
 )
 
 type CreateItemRequest struct {
@@ -49,6 +51,25 @@ type Item struct {
 }
 
 func FindItem(ctx context.Context, id string) (Item, error) {
+	cachedItem, err := findItemFromRedis(ctx, id)
+	if err == nil {
+		return cachedItem, nil
+	}
+
+	item, err := findItemFromMysql(ctx, id)
+	if err != nil {
+		return Item{}, err
+	}
+
+	err = cacheItemOnRedis(ctx, item)
+	if err != nil {
+		logrus.WithError(err).Error("store.FindItem: failed to cache item")
+	}
+
+	return item, nil
+}
+
+func findItemFromMysql(ctx context.Context, id string) (Item, error) {
 	db, err := adapter.GetMysqlDB()
 	if err != nil {
 		return Item{}, err
@@ -69,4 +90,36 @@ func FindItem(ctx context.Context, id string) (Item, error) {
 	item.ID = id
 
 	return item, nil
+}
+
+func cacheItemOnRedis(ctx context.Context, payload Item) error {
+	client, err := adapter.GetRedisClient()
+	if err != nil {
+		return err
+	}
+
+	payloadBytes, _ := json.Marshal(payload)
+
+	key := "items." + payload.ID
+	err = client.Set(ctx, key, string(payloadBytes), 1*time.Minute).Err()
+
+	return err
+}
+
+func findItemFromRedis(ctx context.Context, id string) (Item, error) {
+	client, err := adapter.GetRedisClient()
+	if err != nil {
+		return Item{}, err
+	}
+
+	key := "items." + id
+	result, err := client.Get(ctx, key).Result()
+	if err != nil {
+		return Item{}, err
+	}
+
+	var item Item
+	err = json.Unmarshal([]byte(result), &item)
+
+	return item, err
 }
