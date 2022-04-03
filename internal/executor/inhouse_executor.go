@@ -2,7 +2,6 @@ package executor
 
 import (
 	"context"
-	"errors"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -57,12 +56,15 @@ func createInhouseExecutor(cfg *inhouseConfig) Executor {
 			return ExecuteResult{}, err
 		}
 
-		if err = cmd.Wait(); err != nil {
-			return ExecuteResult{}, err
-		}
+		_ = cmd.Wait()
 
 		if len(errBytes) > 0 {
-			return ExecuteResult{}, errors.New(string(errBytes))
+			errLines := strings.Split(string(errBytes), "\n")
+
+			return ExecuteResult{
+				IsError: true,
+				Output:  errLines,
+			}, nil
 		}
 
 		outputStringLines := strings.Split(string(outputBytes), "\n")
