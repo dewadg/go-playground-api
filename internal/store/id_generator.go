@@ -38,7 +38,7 @@ func generateIDs(numOfIDs int, length int) []string {
 	return reservedIDs
 }
 
-func SeedIDs(ctx context.Context) error {
+func SeedIDs(ctx context.Context, numOfIDs int, length int) error {
 	db, err := adapter.GetMysqlDB()
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func SeedIDs(ctx context.Context) error {
 	}
 	defer stmt.Close()
 
-	ids := generateIDs(1000, 5)
+	ids := generateIDs(numOfIDs, length)
 	for _, id := range ids {
 		_, err = stmt.ExecContext(ctx, id)
 		if err != nil {
