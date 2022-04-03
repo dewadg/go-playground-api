@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/dewadg/go-playground-api/internal/gql"
+	"github.com/dewadg/go-playground-api/internal/rest"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/sirupsen/logrus"
@@ -23,6 +24,10 @@ func Command() *cobra.Command {
 
 			if err := gql.Register(router); err != nil {
 				logrus.WithError(err).Fatal("failed to register gql handler")
+			}
+
+			if err := rest.Register(router); err != nil {
+				logrus.WithError(err).Fatal("failed to register rest handler")
 			}
 
 			address := "127.0.0.1:8000"
