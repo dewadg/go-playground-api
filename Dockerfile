@@ -17,7 +17,7 @@ COPY . .
 
 RUN cd web && npm i && npm run build
 
-FROM alpine
+FROM golang:1.18-alpine
 
 WORKDIR /usr/bin/go-playground
 
