@@ -12,7 +12,8 @@ type ExecutePayload struct {
 }
 
 type ExecuteResult struct {
-	Output []string
+	IsError bool
+	Output  []string
 }
 
 var DefaultExecutor = NewInhouse(
