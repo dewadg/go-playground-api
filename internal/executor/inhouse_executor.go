@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"strings"
+	"sync"
 )
 
 func NewInhouse(cfgFuncs ...InhouseConfigurator) Executor {
@@ -46,33 +47,17 @@ func createInhouseExecutor(cfg *inhouseConfig) Executor {
 			return ExecuteResult{}, err
 		}
 
-		errBytes, err := io.ReadAll(stderr)
-		if err != nil {
-			return ExecuteResult{}, err
-		}
-
-		outputBytes, err := io.ReadAll(stdout)
-		if err != nil {
-			return ExecuteResult{}, err
-		}
+		outputChan := fanInStringChan(
+			toStringChan(stderr),
+			toStringChan(stdout),
+		)
 
 		_ = cmd.Wait()
 
-		if len(errBytes) > 0 {
-			errLines := strings.Split(string(errBytes), "\n")
-
-			return ExecuteResult{
-				IsError: true,
-				Output:  errLines,
-			}, nil
-		}
-
-		outputStringLines := strings.Split(string(outputBytes), "\n")
 		result := ExecuteResult{
 			Output: make([]string, 0),
 		}
-
-		for _, line := range outputStringLines {
+		for line := range outputChan {
 			if len(line) == 0 {
 				continue
 			}
@@ -82,4 +67,47 @@ func createInhouseExecutor(cfg *inhouseConfig) Executor {
 
 		return result, nil
 	}
+}
+
+func toStringChan(reader io.Reader) chan string {
+	outputChan := make(chan string)
+
+	go func() {
+		for {
+			p := make([]byte, 0, 512)
+			n, err := reader.Read(p[:cap(p)])
+			if err != nil {
+				close(outputChan)
+				return
+			}
+
+			outputChan <- string(p[:n-1])
+		}
+	}()
+
+	return outputChan
+}
+
+func fanInStringChan(stringChans ...chan string) chan string {
+	outputChan := make(chan string)
+	wg := sync.WaitGroup{}
+	wg.Add(len(stringChans))
+
+	for _, stringChan := range stringChans {
+		go func(input chan string) {
+			for line := range input {
+				outputChan <- line
+			}
+
+			wg.Done()
+		}(stringChan)
+	}
+
+	go func() {
+		wg.Wait()
+
+		close(outputChan)
+	}()
+
+	return outputChan
 }
