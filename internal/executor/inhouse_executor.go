@@ -81,7 +81,10 @@ func toStringChan(reader io.Reader) chan string {
 				return
 			}
 
-			outputChan <- string(p[:n-1])
+			splitLines := strings.Split(string(p[:n-1]), "\n")
+			for _, line := range splitLines {
+				outputChan <- line
+			}
 		}
 	}()
 
