@@ -8,6 +8,8 @@ type Mutation {
   execute(payload: ExecutionRequest!): ExecutionResponse!
 
   createItem(payload: CreateItemRequest!): CreateItemResponse!
+
+  updateItem(shareId: ID!, payload: UpdateItemRequest!): Item!
 }
 
 input ExecutionRequest {
@@ -23,6 +25,14 @@ input CreateItemRequest {
 }
 
 type CreateItemResponse {
+  shareId: ID!
+}
+
+input UpdateItemRequest {
+  input: [String!]!
+}
+
+type UpdateItemResponse {
   shareId: ID!
 }
 

@@ -13,7 +13,15 @@ type CreateItemRequest struct {
 	Input []string
 }
 
+type UpdateItemRequest struct {
+	Input []string
+}
+
 type CreateItemResponse struct {
+	ShareID string
+}
+
+type UpdateItemResponse struct {
 	ShareID string
 }
 
@@ -122,4 +130,43 @@ func findItemFromRedis(ctx context.Context, id string) (Item, error) {
 	err = json.Unmarshal([]byte(result), &item)
 
 	return item, err
+}
+
+func removeItemFromRedis(ctx context.Context, id string) error {
+	client, err := adapter.GetRedisClient()
+	if err != nil {
+		return err
+	}
+
+	key := "items." + id
+	err = client.Del(ctx, key).Err()
+
+	return err
+}
+
+func UpdateItem(ctx context.Context, shareID string, payload UpdateItemRequest) (Item, error) {
+	db, err := adapter.GetMysqlDB()
+	if err != nil {
+		return Item{}, err
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return Item{}, err
+	}
+
+	query := `UPDATE items SET data = ?, updated_at = NOW() WHERE id = ?`
+	_, err = db.ExecContext(ctx, query, string(payloadBytes), shareID)
+	if err != nil {
+		return Item{}, err
+	}
+
+	if err = removeItemFromRedis(ctx, shareID); err != nil {
+		logrus.WithError(err).Error("error while removing item from redis after update")
+	}
+
+	return Item{
+		ID:    shareID,
+		Input: payload.Input,
+	}, nil
 }
