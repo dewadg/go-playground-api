@@ -56,15 +56,16 @@ type UpdateItemResponse struct {
 func (r *resolver) UpdateItem(ctx context.Context, args struct {
 	ShareID string
 	Payload CreateItemRequest
-}) (UpdateItemResponse, error) {
+}) (Item, error) {
 	result, err := store.UpdateItem(ctx, args.ShareID, store.UpdateItemRequest{
 		Input: args.Payload.Input,
 	})
 	if err != nil {
-		return UpdateItemResponse{}, err
+		return Item{}, err
 	}
 
-	return UpdateItemResponse{
-		ShareID: graphql.ID(result.ShareID),
+	return Item{
+		ID:    graphql.ID(result.ID),
+		Input: result.Input,
 	}, nil
 }

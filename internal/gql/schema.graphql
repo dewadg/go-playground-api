@@ -9,7 +9,7 @@ type Mutation {
 
   createItem(payload: CreateItemRequest!): CreateItemResponse!
 
-  updateItem(shareId: ID!, payload: UpdateItemRequest!): UpdateItemResponse!
+  updateItem(shareId: ID!, payload: UpdateItemRequest!): Item!
 }
 
 input ExecutionRequest {
