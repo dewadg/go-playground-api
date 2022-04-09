@@ -44,3 +44,27 @@ func (r *resolver) Item(ctx context.Context, args struct{ ID graphql.ID }) (Item
 		Input: item.Input,
 	}, nil
 }
+
+type UpdateItemRequest struct {
+	Input []string
+}
+
+type UpdateItemResponse struct {
+	ShareID graphql.ID
+}
+
+func (r *resolver) UpdateItem(ctx context.Context, args struct {
+	ShareID string
+	Payload CreateItemRequest
+}) (UpdateItemResponse, error) {
+	result, err := store.UpdateItem(ctx, args.ShareID, store.UpdateItemRequest{
+		Input: args.Payload.Input,
+	})
+	if err != nil {
+		return UpdateItemResponse{}, err
+	}
+
+	return UpdateItemResponse{
+		ShareID: graphql.ID(result.ShareID),
+	}, nil
+}

@@ -13,7 +13,15 @@ type CreateItemRequest struct {
 	Input []string
 }
 
+type UpdateItemRequest struct {
+	Input []string
+}
+
 type CreateItemResponse struct {
+	ShareID string
+}
+
+type UpdateItemResponse struct {
 	ShareID string
 }
 
@@ -122,4 +130,26 @@ func findItemFromRedis(ctx context.Context, id string) (Item, error) {
 	err = json.Unmarshal([]byte(result), &item)
 
 	return item, err
+}
+
+func UpdateItem(ctx context.Context, shareID string, payload UpdateItemRequest) (UpdateItemResponse, error) {
+	db, err := adapter.GetMysqlDB()
+	if err != nil {
+		return UpdateItemResponse{}, err
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return UpdateItemResponse{}, err
+	}
+
+	query := `UPDATE items SET data = ?, updated_at = NOW() WHERE id = ?`
+	_, err = db.ExecContext(ctx, query, string(payloadBytes), shareID)
+	if err != nil {
+		return UpdateItemResponse{}, err
+	}
+
+	return UpdateItemResponse{
+		ShareID: shareID,
+	}, nil
 }
