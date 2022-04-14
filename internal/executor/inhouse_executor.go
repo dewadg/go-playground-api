@@ -4,9 +4,10 @@ import (
 	"context"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -27,7 +28,7 @@ func createInhouseExecutor(cfg *inhouseConfig) Executor {
 		file := []byte(strings.Join(payload.Input, "\n"))
 		fileName := cfg.tempDir + "/" + payload.SessionID + ".go"
 
-		err := ioutil.WriteFile(fileName, file, fs.ModePerm)
+		err := os.WriteFile(fileName, file, fs.ModePerm)
 		if err != nil {
 			return ExecuteResult{}, err
 		}
@@ -41,8 +42,7 @@ func createInhouseExecutor(cfg *inhouseConfig) Executor {
 			}
 		}()
 
-		cmd := exec.CommandContext(ctx, "go", "run", "main.go")
-		cmd.Dir = cfg.tempDir
+		cmd := exec.CommandContext(ctx, "go", "run", fileName)
 
 		stderr, err := cmd.StderrPipe()
 		if err != nil {
@@ -68,11 +68,17 @@ func createInhouseExecutor(cfg *inhouseConfig) Executor {
 		_ = cmd.Wait()
 
 		result := ExecuteResult{
-			Output: make([]string, 0),
+			Output:     make([]string, 0),
+			ErrorLines: make([]ExecuteErrorLine, 0),
 		}
 		for line := range outputChan {
 			if len(line) == 0 {
 				continue
+			}
+
+			isError, errorLine := parseExecutionLine(line)
+			if isError {
+				result.ErrorLines = append(result.ErrorLines, errorLine)
 			}
 
 			result.Output = append(result.Output, line)
@@ -126,4 +132,22 @@ func fanInStringChan(stringChans ...chan string) chan string {
 	}()
 
 	return outputChan
+}
+
+func parseExecutionLine(line string) (bool, ExecuteErrorLine) {
+	pattern := regexp.MustCompile(`:(.*?)\:(.*?)\:(.*)`)
+	matches := pattern.FindStringSubmatch(line)
+
+	if len(matches) < 3 {
+		return false, ExecuteErrorLine{}
+	}
+
+	errorLine, _ := strconv.Atoi(matches[1])
+	errorColumn, _ := strconv.Atoi(matches[2])
+
+	return true, ExecuteErrorLine{
+		Line:    errorLine,
+		Column:  errorColumn,
+		Message: matches[3][1:],
+	}
 }

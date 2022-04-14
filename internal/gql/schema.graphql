@@ -18,6 +18,13 @@ input ExecutionRequest {
 
 type ExecutionResponse {
   output: [String!]!
+  errorLines: [ExecutionErrorLine!]
+}
+
+type ExecutionErrorLine {
+  line: Int!
+  column: Int!
+  message: String!
 }
 
 input CreateItemRequest {

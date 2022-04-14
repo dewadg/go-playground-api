@@ -13,8 +13,15 @@ type ExecutePayload struct {
 }
 
 type ExecuteResult struct {
-	IsError bool
-	Output  []string
+	IsError    bool
+	Output     []string
+	ErrorLines []ExecuteErrorLine
+}
+
+type ExecuteErrorLine struct {
+	Line    int
+	Column  int
+	Message string
 }
 
 var DefaultExecutor = NewInhouse(
