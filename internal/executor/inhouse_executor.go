@@ -5,9 +5,12 @@ import (
 	"io"
 	"io/fs"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
+
+	"github.com/sirupsen/logrus"
 )
 
 func NewInhouse(cfgFuncs ...InhouseConfigurator) Executor {
@@ -22,11 +25,21 @@ func NewInhouse(cfgFuncs ...InhouseConfigurator) Executor {
 func createInhouseExecutor(cfg *inhouseConfig) Executor {
 	return func(ctx context.Context, payload ExecutePayload) (ExecuteResult, error) {
 		file := []byte(strings.Join(payload.Input, "\n"))
+		fileName := cfg.tempDir + "/" + payload.SessionID + ".go"
 
-		err := ioutil.WriteFile(cfg.tempDir+"/main.go", file, fs.ModePerm)
+		err := ioutil.WriteFile(fileName, file, fs.ModePerm)
 		if err != nil {
 			return ExecuteResult{}, err
 		}
+		defer func() {
+			err := os.Remove(fileName)
+			if err != nil {
+				logrus.
+					WithField("file", fileName).
+					WithError(err).
+					Error("failed to remove file")
+			}
+		}()
 
 		cmd := exec.CommandContext(ctx, "go", "run", "main.go")
 		cmd.Dir = cfg.tempDir

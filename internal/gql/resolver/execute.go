@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dewadg/go-playground-api/internal/executor"
+	"github.com/google/uuid"
 )
 
 type ExecutionRequest struct {
@@ -16,7 +17,8 @@ type ExecutionResponse struct {
 
 func (r *resolver) Execute(ctx context.Context, args struct{ Payload ExecutionRequest }) (ExecutionResponse, error) {
 	payload := executor.ExecutePayload{
-		Input: args.Payload.Input,
+		SessionID: uuid.New().String(),
+		Input:     args.Payload.Input,
 	}
 
 	result, err := executor.Do(ctx, executor.DefaultExecutor, payload)

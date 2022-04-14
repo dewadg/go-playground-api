@@ -8,7 +8,8 @@ import (
 type Executor func(ctx context.Context, payload ExecutePayload) (ExecuteResult, error)
 
 type ExecutePayload struct {
-	Input []string
+	SessionID string
+	Input     []string
 }
 
 type ExecuteResult struct {
