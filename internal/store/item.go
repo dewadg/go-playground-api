@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/gob"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/dewadg/go-playground-api/internal/adapter"
@@ -110,14 +111,14 @@ func cacheItemOnRedis(ctx context.Context, payload Item) error {
 		return err
 	}
 
-	var buf bytes.Buffer
-	err = gob.NewEncoder(&buf).Encode(payload)
+	buf := bytes.NewBuffer(nil)
+	err = gob.NewEncoder(buf).Encode(payload)
 	if err != nil {
 		return err
 	}
 
 	key := "items." + payload.ID
-	err = client.Set(ctx, key, buf.Bytes(), 1*time.Minute).Err()
+	err = client.Set(ctx, key, buf.String(), 1*time.Minute).Err()
 
 	return err
 }
@@ -129,14 +130,13 @@ func findItemFromRedis(ctx context.Context, id string) (Item, error) {
 	}
 
 	key := "items." + id
-	result, err := client.Get(ctx, key).Bytes()
+	result, err := client.Get(ctx, key).Result()
 	if err != nil {
 		return Item{}, err
 	}
 
-	buf := bytes.NewReader(result)
-
 	var item Item
+	buf := strings.NewReader(result)
 	if err = gob.NewDecoder(buf).Decode(&item); err != nil {
 		return Item{}, err
 	}
