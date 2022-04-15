@@ -62,6 +62,8 @@ func FindItem(ctx context.Context, id string) (Item, error) {
 	cachedItem, err := findItemFromRedis(ctx, id)
 	if err == nil {
 		return cachedItem, nil
+	} else {
+		logrus.WithError(err).Error("store.FindItem: failed to fetch item cache")
 	}
 
 	item, err := findItemFromMysql(ctx, id)
@@ -121,13 +123,13 @@ func findItemFromRedis(ctx context.Context, id string) (Item, error) {
 	}
 
 	key := "items." + id
-	result, err := client.Get(ctx, key).Result()
+	result, err := client.Get(ctx, key).Bytes()
 	if err != nil {
 		return Item{}, err
 	}
 
 	var item Item
-	err = json.Unmarshal([]byte(result), &item)
+	err = json.Unmarshal(result, &item)
 
 	return item, err
 }
