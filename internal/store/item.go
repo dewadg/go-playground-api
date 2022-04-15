@@ -1,7 +1,9 @@
 package store
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"encoding/json"
 	"time"
 
@@ -100,19 +102,29 @@ func findItemFromMysql(ctx context.Context, id string) (Item, error) {
 	return item, nil
 }
 
+var cacheWriteBuff bytes.Buffer
+var cacheWriteEnc = gob.NewEncoder(&cacheWriteBuff)
+
 func cacheItemOnRedis(ctx context.Context, payload Item) error {
 	client, err := adapter.GetRedisClient()
 	if err != nil {
 		return err
 	}
 
-	payloadBytes, _ := json.Marshal(payload)
+	err = cacheWriteEnc.Encode(payload)
+	if err != nil {
+		return err
+	}
 
 	key := "items." + payload.ID
-	err = client.Set(ctx, key, string(payloadBytes), 1*time.Minute).Err()
+	err = client.Set(ctx, key, cacheWriteBuff.Bytes(), 1*time.Minute).Err()
+	cacheWriteBuff.Reset()
 
 	return err
 }
+
+var cacheReadBuff bytes.Buffer
+var cacheReadDecoder = gob.NewDecoder(&cacheReadBuff)
 
 func findItemFromRedis(ctx context.Context, id string) (Item, error) {
 	client, err := adapter.GetRedisClient()
@@ -121,13 +133,19 @@ func findItemFromRedis(ctx context.Context, id string) (Item, error) {
 	}
 
 	key := "items." + id
-	result, err := client.Get(ctx, key).Result()
+	result, err := client.Get(ctx, key).Bytes()
 	if err != nil {
 		return Item{}, err
 	}
 
+	_, err = cacheReadBuff.Write(result)
+	if err != nil {
+		return Item{}, err
+	}
+	cacheReadBuff.Reset()
+
 	var item Item
-	err = json.Unmarshal([]byte(result), &item)
+	err = cacheReadDecoder.Decode(&item)
 
 	return item, err
 }
