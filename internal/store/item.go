@@ -64,6 +64,8 @@ func FindItem(ctx context.Context, id string) (Item, error) {
 	cachedItem, err := findItemFromRedis(ctx, id)
 	if err == nil {
 		return cachedItem, nil
+	} else {
+		logrus.WithError(err).Error("store.FindItem: failed to fetch from cache")
 	}
 
 	item, err := findItemFromMysql(ctx, id)
@@ -102,29 +104,23 @@ func findItemFromMysql(ctx context.Context, id string) (Item, error) {
 	return item, nil
 }
 
-var cacheWriteBuff bytes.Buffer
-var cacheWriteEnc = gob.NewEncoder(&cacheWriteBuff)
-
 func cacheItemOnRedis(ctx context.Context, payload Item) error {
 	client, err := adapter.GetRedisClient()
 	if err != nil {
 		return err
 	}
 
-	err = cacheWriteEnc.Encode(payload)
+	var buf bytes.Buffer
+	err = gob.NewEncoder(&buf).Encode(payload)
 	if err != nil {
 		return err
 	}
 
 	key := "items." + payload.ID
-	err = client.Set(ctx, key, cacheWriteBuff.Bytes(), 1*time.Minute).Err()
-	cacheWriteBuff.Reset()
+	err = client.Set(ctx, key, buf.Bytes(), 1*time.Minute).Err()
 
 	return err
 }
-
-var cacheReadBuff bytes.Buffer
-var cacheReadDecoder = gob.NewDecoder(&cacheReadBuff)
 
 func findItemFromRedis(ctx context.Context, id string) (Item, error) {
 	client, err := adapter.GetRedisClient()
@@ -138,14 +134,12 @@ func findItemFromRedis(ctx context.Context, id string) (Item, error) {
 		return Item{}, err
 	}
 
-	_, err = cacheReadBuff.Write(result)
-	if err != nil {
-		return Item{}, err
-	}
-	cacheReadBuff.Reset()
+	buf := bytes.NewReader(result)
 
 	var item Item
-	err = cacheReadDecoder.Decode(&item)
+	if err = gob.NewDecoder(buf).Decode(&item); err != nil {
+		return Item{}, err
+	}
 
 	return item, err
 }
