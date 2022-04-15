@@ -1,0 +1,6 @@
+{
+  "query":" query($id: ID!) {\n\titem(id: $id) {\n\t\tid\n\t\tinput\n\t}\n}",
+  "variables": {
+    "id":"q4x0g"
+  }
+}
