@@ -39,7 +39,7 @@ type inhouseExecutorQueueOutput struct {
 }
 
 func createInhouseExecutor(cfg *inhouseConfig) Executor {
-	inboundQueue := make(chan inhouseExecutorQueueInput, 0)
+	inboundQueue := make(chan inhouseExecutorQueueInput, cfg.numOfWorkers)
 
 	for i := 0; i < cfg.numOfWorkers; i++ {
 		go func(index int) {
