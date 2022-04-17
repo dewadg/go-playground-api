@@ -134,8 +134,9 @@ func fanInStringChan(stringChans ...chan string) chan string {
 	return outputChan
 }
 
+var pattern = regexp.MustCompile(`:(.*?)\:(.*?)\:(.*)`)
+
 func parseExecutionLine(line string) (bool, ExecuteErrorLine) {
-	pattern := regexp.MustCompile(`:(.*?)\:(.*?)\:(.*)`)
 	matches := pattern.FindStringSubmatch(line)
 
 	if len(matches) < 3 {
