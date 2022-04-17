@@ -85,6 +85,10 @@ func createInhouseExecutor(cfg *inhouseConfig) Executor {
 }
 
 func executeInhouse(ctx context.Context, cfg *inhouseConfig, payload ExecutePayload) (ExecuteResult, error) {
+	if err := ctx.Err(); err != nil {
+		return ExecuteResult{}, err
+	}
+
 	file := []byte(strings.Join(payload.Input, "\n"))
 	fileName := cfg.tempDir + "/" + payload.SessionID + ".go"
 
