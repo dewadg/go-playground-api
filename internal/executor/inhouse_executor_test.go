@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func Test_createInhouseExecutor(t *testing.T) {
@@ -66,5 +68,35 @@ func Test_createInhouseExecutor(t *testing.T) {
 				t.Errorf("createExecutor() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func Benchmark_InhouseExecutor(b *testing.B) {
+	executor := NewInhouse(
+		InhouseWithTempDir("./__tests__"),
+	)
+
+	for i := 0; i < b.N; i++ {
+		result, err := executor(context.Background(), ExecutePayload{
+			SessionID: uuid.New().String(),
+			Input: []string{
+				"package main",
+				"",
+				"import \"fmt\"",
+				"",
+				"func main() {",
+				"fmt.Println(\"Hello, world!\")",
+				"}",
+				"",
+			},
+		})
+		if err != nil {
+			b.Error(err)
+			continue
+		}
+
+		if result.Output[0] != "Hello, world!" {
+			b.Errorf("unexpected output: %s", result.Output[0])
+		}
 	}
 }
