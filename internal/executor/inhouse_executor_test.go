@@ -35,7 +35,8 @@ func Test_createInhouseExecutor(t *testing.T) {
 
 					splitLineFile := strings.Split(string(file), "\n")
 					payload := ExecutePayload{
-						Input: make([]string, len(splitLineFile)),
+						SessionID: "123",
+						Input:     make([]string, len(splitLineFile)),
 					}
 
 					for i, line := range splitLineFile {
@@ -50,6 +51,7 @@ func Test_createInhouseExecutor(t *testing.T) {
 				Output: []string{
 					"Hello, world!",
 				},
+				ErrorLines: []ExecuteErrorLine{},
 			},
 		},
 	}
