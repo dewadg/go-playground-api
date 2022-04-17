@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -41,16 +42,25 @@ func createInhouseExecutor(cfg *inhouseConfig) Executor {
 	inboundQueue := make(chan inhouseExecutorQueueInput, 0)
 
 	for i := 0; i < cfg.numOfWorkers; i++ {
-		go func() {
+		go func(index int) {
+			logger := logrus.WithField("worker", index)
+
 			for input := range inboundQueue {
+				logger.Info("processing")
+
+				start := time.Now()
 				result, err := executeInhouse(input.ctx, input.cfg, input.payload)
 
-				input.outputChan <- inhouseExecutorQueueOutput{
-					result: result,
-					err:    err,
-				}
+				go func() {
+					input.outputChan <- inhouseExecutorQueueOutput{
+						result: result,
+						err:    err,
+					}
+				}()
+
+				logger.WithField("duration", time.Now().Sub(start).Milliseconds()).Info("done")
 			}
-		}()
+		}(i + 1)
 	}
 
 	return func(ctx context.Context, payload ExecutePayload) (ExecuteResult, error) {
