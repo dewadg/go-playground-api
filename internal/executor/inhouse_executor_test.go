@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/google/uuid"
@@ -75,27 +76,35 @@ func Benchmark_InhouseExecutor(b *testing.B) {
 		InhouseWithTempDir("./__tests__"),
 	)
 
+	wg := sync.WaitGroup{}
+	wg.Add(b.N)
 	for i := 0; i < b.N; i++ {
-		result, err := executor(context.Background(), ExecutePayload{
-			SessionID: uuid.New().String(),
-			Input: []string{
-				"package main",
-				"",
-				"import \"fmt\"",
-				"",
-				"func main() {",
-				"fmt.Println(\"Hello, world!\")",
-				"}",
-				"",
-			},
-		})
-		if err != nil {
-			b.Error(err)
-			continue
-		}
+		go func() {
+			defer wg.Done()
 
-		if result.Output[0] != "Hello, world!" {
-			b.Errorf("unexpected output: %s", result.Output[0])
-		}
+			result, err := executor(context.Background(), ExecutePayload{
+				SessionID: uuid.New().String(),
+				Input: []string{
+					"package main",
+					"",
+					"import \"fmt\"",
+					"",
+					"func main() {",
+					"fmt.Println(\"Hello, world!\")",
+					"}",
+					"",
+				},
+			})
+			if err != nil {
+				b.Error(err)
+				return
+			}
+
+			if result.Output[0] != "Hello, world!" {
+				b.Errorf("unexpected output: %s", result.Output[0])
+			}
+		}()
 	}
+
+	wg.Wait()
 }
