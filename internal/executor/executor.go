@@ -26,6 +26,7 @@ type ExecuteErrorLine struct {
 
 var DefaultExecutor = NewInhouse(
 	InhouseWithTempDir(os.Getenv("TEMP_DIR")),
+	InhouseWithNumOfWorkers(4),
 )
 
 func Do(ctx context.Context, executor Executor, payload ExecutePayload) (ExecuteResult, error) {
