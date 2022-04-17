@@ -15,7 +15,9 @@ import (
 )
 
 func NewInhouse(cfgFuncs ...InhouseConfigurator) Executor {
-	cfg := inhouseConfig{}
+	cfg := inhouseConfig{
+		numOfWorkers: 2,
+	}
 	for _, f := range cfgFuncs {
 		f(&cfg)
 	}
@@ -23,69 +25,116 @@ func NewInhouse(cfgFuncs ...InhouseConfigurator) Executor {
 	return createInhouseExecutor(&cfg)
 }
 
-func createInhouseExecutor(cfg *inhouseConfig) Executor {
-	return func(ctx context.Context, payload ExecutePayload) (ExecuteResult, error) {
-		file := []byte(strings.Join(payload.Input, "\n"))
-		fileName := cfg.tempDir + "/" + payload.SessionID + ".go"
+type inhouseExecutorQueueInput struct {
+	cfg        *inhouseConfig
+	ctx        context.Context
+	payload    ExecutePayload
+	outputChan chan inhouseExecutorQueueOutput
+}
 
-		err := os.WriteFile(fileName, file, fs.ModePerm)
-		if err != nil {
-			return ExecuteResult{}, err
-		}
-		defer func() {
-			err := os.Remove(fileName)
-			if err != nil {
-				logrus.
-					WithField("file", fileName).
-					WithError(err).
-					Error("failed to remove file")
+type inhouseExecutorQueueOutput struct {
+	result ExecuteResult
+	err    error
+}
+
+func createInhouseExecutor(cfg *inhouseConfig) Executor {
+	inboundQueue := make(chan inhouseExecutorQueueInput, 0)
+
+	for i := 0; i < cfg.numOfWorkers; i++ {
+		go func() {
+			for input := range inboundQueue {
+				result, err := executeInhouse(input.ctx, input.cfg, input.payload)
+
+				input.outputChan <- inhouseExecutorQueueOutput{
+					result: result,
+					err:    err,
+				}
+			}
+		}()
+	}
+
+	return func(ctx context.Context, payload ExecutePayload) (ExecuteResult, error) {
+		outputChan := make(chan inhouseExecutorQueueOutput, 1)
+
+		go func() {
+			inboundQueue <- inhouseExecutorQueueInput{
+				ctx:        ctx,
+				cfg:        cfg,
+				payload:    payload,
+				outputChan: outputChan,
 			}
 		}()
 
-		cmd := exec.CommandContext(ctx, "go", "run", fileName)
-
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			return ExecuteResult{}, err
+		select {
+		case <-ctx.Done():
+			return ExecuteResult{}, ctx.Err()
+		case output := <-outputChan:
+			return output.result, output.err
 		}
-		defer stderr.Close()
-
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			return ExecuteResult{}, err
-		}
-		defer stdout.Close()
-
-		if err = cmd.Start(); err != nil {
-			return ExecuteResult{}, err
-		}
-
-		outputChan := fanInStringChan(
-			toStringChan(stderr),
-			toStringChan(stdout),
-		)
-
-		_ = cmd.Wait()
-
-		result := ExecuteResult{
-			Output:     make([]string, 0),
-			ErrorLines: make([]ExecuteErrorLine, 0),
-		}
-		for line := range outputChan {
-			if len(line) == 0 {
-				continue
-			}
-
-			isError, errorLine := parseExecutionLine(line)
-			if isError {
-				result.ErrorLines = append(result.ErrorLines, errorLine)
-			}
-
-			result.Output = append(result.Output, line)
-		}
-
-		return result, nil
 	}
+}
+
+func executeInhouse(ctx context.Context, cfg *inhouseConfig, payload ExecutePayload) (ExecuteResult, error) {
+	file := []byte(strings.Join(payload.Input, "\n"))
+	fileName := cfg.tempDir + "/" + payload.SessionID + ".go"
+
+	err := os.WriteFile(fileName, file, fs.ModePerm)
+	if err != nil {
+		return ExecuteResult{}, err
+	}
+	defer func() {
+		err := os.Remove(fileName)
+		if err != nil {
+			logrus.
+				WithField("file", fileName).
+				WithError(err).
+				Error("failed to remove file")
+		}
+	}()
+
+	cmd := exec.CommandContext(ctx, "go", "run", fileName)
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return ExecuteResult{}, err
+	}
+	defer stderr.Close()
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return ExecuteResult{}, err
+	}
+	defer stdout.Close()
+
+	if err = cmd.Start(); err != nil {
+		return ExecuteResult{}, err
+	}
+
+	outputChan := fanInStringChan(
+		toStringChan(stderr),
+		toStringChan(stdout),
+	)
+
+	_ = cmd.Wait()
+
+	result := ExecuteResult{
+		Output:     make([]string, 0),
+		ErrorLines: make([]ExecuteErrorLine, 0),
+	}
+	for line := range outputChan {
+		if len(line) == 0 {
+			continue
+		}
+
+		isError, errorLine := parseExecutionLine(line)
+		if isError {
+			result.ErrorLines = append(result.ErrorLines, errorLine)
+		}
+
+		result.Output = append(result.Output, line)
+	}
+
+	return result, nil
 }
 
 func toStringChan(reader io.Reader) chan string {

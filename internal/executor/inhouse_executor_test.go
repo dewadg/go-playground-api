@@ -24,7 +24,8 @@ func Test_createInhouseExecutor(t *testing.T) {
 			name: "success",
 			args: args{
 				cfg: &inhouseConfig{
-					tempDir: "./__tests__",
+					tempDir:      "./__tests__",
+					numOfWorkers: 2,
 				},
 				ctx: context.Background(),
 				payload: func() ExecutePayload {
