@@ -1,0 +1,3 @@
+POST https://playground.dewadg.pro/graphql
+Content-Type: application/json
+@./execute_load_test.json

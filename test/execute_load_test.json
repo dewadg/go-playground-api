@@ -1,0 +1,14 @@
+{
+  "query":"mutation($input: [String!]!) {\n\texecute(payload: {\n\t\tinput: $input\n\t}) {\n\t\toutput\n\t\terrorLines {\n\t\t\tline\n\t\t\tcolumn\n\t\t\tmessage\n\t\t}\n\t}\n}\n",
+  "variables": {
+    "input": [
+      "package main",
+      "",
+      "import \"fmt\"",
+      "",
+      "func main() {",
+      "\tfmt.Println(\"Hello, world!\")",
+      "}"
+    ]
+  }
+}
