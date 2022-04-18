@@ -16,6 +16,7 @@ type ExecuteResult struct {
 	IsError    bool
 	Output     []string
 	ErrorLines []ExecuteErrorLine
+	Duration   int32
 }
 
 type ExecuteErrorLine struct {

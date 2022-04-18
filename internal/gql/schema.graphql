@@ -19,6 +19,7 @@ input ExecutionRequest {
 type ExecutionResponse {
   output: [String!]!
   errorLines: [ExecutionErrorLine!]
+  duration: Int!
 }
 
 type ExecutionErrorLine {

@@ -120,6 +120,7 @@ func executeInhouse(ctx context.Context, cfg *inhouseConfig, payload ExecutePayl
 	}
 	defer stdout.Close()
 
+	start := time.Now()
 	if err = cmd.Start(); err != nil {
 		return ExecuteResult{}, err
 	}
@@ -130,10 +131,12 @@ func executeInhouse(ctx context.Context, cfg *inhouseConfig, payload ExecutePayl
 	)
 
 	_ = cmd.Wait()
+	end := time.Now().Sub(start).Milliseconds()
 
 	result := ExecuteResult{
 		Output:     make([]string, 0),
 		ErrorLines: make([]ExecuteErrorLine, 0),
+		Duration:   int32(end),
 	}
 	for line := range outputChan {
 		if len(line) == 0 {

@@ -14,6 +14,7 @@ type ExecutionRequest struct {
 type ExecutionResponse struct {
 	Output     []string              `json:"output"`
 	ErrorLines *[]ExecutionErrorLine `json:"errorLines"`
+	Duration   int32                 `json:"duration"`
 }
 
 type ExecutionErrorLine struct {
@@ -34,7 +35,8 @@ func (r *resolver) Execute(ctx context.Context, args struct{ Payload ExecutionRe
 	}
 
 	resp := ExecutionResponse{
-		Output: result.Output,
+		Output:   result.Output,
+		Duration: result.Duration,
 	}
 	if len(result.ErrorLines) > 0 {
 		errorLines := make([]ExecutionErrorLine, len(result.ErrorLines))
