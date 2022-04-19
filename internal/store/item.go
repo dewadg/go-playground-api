@@ -52,7 +52,7 @@ func FindItem(ctx context.Context, id string) (Item, error) {
 	if err == nil {
 		return cachedItem, nil
 	} else {
-		logrus.WithError(err).Error("store.FindItem: failed to fetch item cache")
+		logrus.WithError(err).Warn("store.FindItem: failed to fetch item cache")
 	}
 
 	item, err := primaryGetter.Get(ctx, id)
