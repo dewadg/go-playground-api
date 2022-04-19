@@ -1,6 +1,7 @@
 package generateids
 
 import (
+	"os"
 	"strconv"
 
 	"github.com/dewadg/go-playground-api/internal/store"
@@ -12,6 +13,8 @@ func Command() *cobra.Command {
 	return &cobra.Command{
 		Use: "generate:ids",
 		Run: func(cmd *cobra.Command, args []string) {
+			_ = os.Setenv("CLI_MODE", "true")
+
 			var numOfIDs int
 			var length int
 			if len(args) >= 2 {
@@ -30,6 +33,8 @@ func Command() *cobra.Command {
 
 			if err := store.SeedIDs(cmd.Context(), numOfIDs, length); err != nil {
 				logrus.WithError(err).Fatal("failed to execute generate:ids")
+			} else {
+				logrus.Info("generate id completed")
 			}
 		},
 	}
