@@ -2,10 +2,12 @@
 -- +goose StatementBegin
 CREATE TABLE items(
     id VARCHAR(255) PRIMARY KEY,
-    data JSON,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
+    data TEXT,
+    created_at TEXT,
+    assigned_at TEXT DEFAULT NULL
 );
+
+CREATE INDEX items_assigned_at ON items(assigned_at);
 -- +goose StatementEnd
 
 -- +goose Down
