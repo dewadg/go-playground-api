@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option go_package = "pkg/pb";
+package go_playground;
+
+message ExecuteRequest {
+  string session_id = 1;
+  repeated string input = 2;
+}
+
+message ExecuteErrorLine {
+  int32 line = 1;
+  int32 column = 2;
+  string message = 3;
+}
+
+message ExecuteResponse {
+  bool is_error = 1;
+  repeated string output = 2;
+  repeated ExecuteErrorLine error_lines = 3;
+  int32 duration = 4;
+}
+
+service ExecutionService {
+  rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+}
