@@ -1,13 +1,13 @@
 package serve
 
 import (
-	"net/http"
+	"context"
 	"os"
+	"os/signal"
+	"time"
 
-	"github.com/dewadg/go-playground-api/internal/gql"
+	"github.com/dewadg/go-playground-api/internal/grpc"
 	"github.com/dewadg/go-playground-api/internal/rest"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -16,28 +16,30 @@ func Command() *cobra.Command {
 	return &cobra.Command{
 		Use: "serve",
 		Run: func(cmd *cobra.Command, args []string) {
-			router := chi.NewRouter()
-			router.Use(cors.Handler(cors.Options{
-				AllowedOrigins: []string{"https://*", "http://*"},
-				AllowedMethods: []string{"GET", "POST", "OPTIONS"},
-			}))
+			ctx, stop := context.WithCancel(context.Background())
 
-			if err := gql.Register(router); err != nil {
-				logrus.WithError(err).Fatal("failed to register gql handler")
-			}
+			sigChan := make(chan os.Signal, 1)
+			signal.Notify(sigChan, os.Interrupt, os.Kill)
 
-			if err := rest.Register(router); err != nil {
-				logrus.WithError(err).Fatal("failed to register rest handler")
-			}
+			go func() {
+				if err := rest.Run(ctx); err != nil {
+					logrus.WithError(err).Fatal("failed to start http server")
+				}
+			}()
 
-			address := "127.0.0.1:8000"
+			go func() {
+				if err := grpc.Run(ctx); err != nil {
+					logrus.WithError(err).Fatal("failed to start grpc server")
+				}
+			}()
+
+			<-sigChan
+			stop()
+
 			if os.Getenv("APP_ENV") == "production" {
-				address = "0.0.0.0:8000"
-			}
-
-			logrus.Info("starting http server at ", address)
-			if err := http.ListenAndServe(address, router); err != nil {
-				logrus.WithError(err).Fatal("failed to start http server")
+				logrus.Info("gracefully shutting down for 5 seconds...")
+				time.Sleep(5 * time.Second)
+				logrus.Info("shutdown completed")
 			}
 		},
 	}

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "pkg/pb";
+package go_playground;
+
+message RegisterRequest {
+  string id = 1;
+}
+
+message RegisterResponse {
+  string message = 1;
+}
+
+service OrchestratorService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+}
