@@ -11,4 +11,4 @@ run-migrations:
 	goose -dir build/migrations mysql "${MYSQL_DSN}" up
 
 generate-proto:
-	protoc executor.proto --proto_path=api/proto --go-grpc_out=.
+	protoc ./api/proto/*.proto --proto_path=api/proto --go-grpc_out=. --go_out=.
