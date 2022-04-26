@@ -29,6 +29,7 @@ RUN mkdir /opt/go-playground/temp
 RUN mkdir /opt/go-playground/data
 
 EXPOSE 8000
+EXPOSE 9000
 
 ENV APP_ENV production
 ENV TEMP_DIR /opt/go-playground/temp
