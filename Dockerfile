@@ -36,3 +36,4 @@ ENV TEMP_DIR /opt/go-playground/temp
 ENV WEB_DIR /usr/bin/go-playground/web/dist
 
 ENTRYPOINT ["/usr/bin/go-playground/go-playground"]
+CMD ["serve"]
