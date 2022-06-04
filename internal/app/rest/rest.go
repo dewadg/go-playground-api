@@ -1,16 +1,19 @@
 package rest
 
 import (
-	"github.com/dewadg/go-playground-api/internal/auth"
 	"net/http"
 	"os"
 	"path"
 	"strings"
 
+	"github.com/dewadg/go-playground-api/internal/auth"
+	"github.com/dewadg/go-playground-api/internal/pkg/httputil"
 	"github.com/go-chi/chi"
 )
 
 func Register(router chi.Router) error {
+	router.Use(httputil.AuthMiddleware(auth.ValidateJWT))
+
 	webDir := os.Getenv("WEB_DIR")
 	fs := http.FileServer(http.Dir(webDir))
 

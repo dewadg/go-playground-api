@@ -22,12 +22,12 @@ func Command() *cobra.Command {
 				AllowedMethods: []string{"GET", "POST", "OPTIONS"},
 			}))
 
-			if err := gql.Register(router); err != nil {
-				logrus.WithError(err).Fatal("failed to register gql handler")
-			}
-
 			if err := rest.Register(router); err != nil {
 				logrus.WithError(err).Fatal("failed to register rest handler")
+			}
+
+			if err := gql.Register(router); err != nil {
+				logrus.WithError(err).Fatal("failed to register gql handler")
 			}
 
 			address := "127.0.0.1:8000"

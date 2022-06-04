@@ -2,6 +2,8 @@ type Query {
   ping: String!
 
   item(id: ID!): Item!
+
+  whoami: User!
 }
 
 type Mutation {
@@ -47,4 +49,11 @@ type UpdateItemResponse {
 type Item {
   id: ID!
   input: [String!]!
+}
+
+type User {
+  id: ID!
+  email: String!
+  createdAt: String!
+  updatedAt: String!
 }
