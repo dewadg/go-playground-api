@@ -3,7 +3,7 @@ package gql
 import (
 	_ "embed"
 
-	"github.com/dewadg/go-playground-api/internal/gql/resolver"
+	"github.com/dewadg/go-playground-api/internal/app/gql/resolver"
 	"github.com/go-chi/chi"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"

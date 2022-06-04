@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dewadg/go-playground-api/internal/gql"
-	"github.com/dewadg/go-playground-api/internal/rest"
+	"github.com/dewadg/go-playground-api/internal/app/gql"
+	"github.com/dewadg/go-playground-api/internal/app/rest"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/sirupsen/logrus"

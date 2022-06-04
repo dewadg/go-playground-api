@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/dewadg/go-playground-api/internal/adapter"
+	"github.com/dewadg/go-playground-api/internal/pkg/adapter"
 	"github.com/sirupsen/logrus"
 )
 
