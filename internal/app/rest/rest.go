@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"github.com/dewadg/go-playground-api/internal/auth"
 	"net/http"
 	"os"
 	"path"
@@ -21,6 +22,9 @@ func Register(router chi.Router) error {
 
 		http.ServeFile(writer, request, path.Join(webDir, "/index.html"))
 	}))
+
+	router.Get("/v1/auth/google/login", handleGoogleLogin())
+	router.Get("/v1/auth/google/callback", handleGoogleCallback(auth.GenerateAccessToken))
 
 	return nil
 }
