@@ -1,13 +1,13 @@
 FROM golang:1.18-alpine AS server-build
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git gcc musl-dev
 
 WORKDIR /build
 
 COPY . .
 
 RUN go mod download
-RUN go build -o go-playground
+RUN CGO=1 go build -o go-playground
 
 FROM node:lts-alpine AS web-build
 
