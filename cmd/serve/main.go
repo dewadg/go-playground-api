@@ -20,6 +20,7 @@ func Command() *cobra.Command {
 			router.Use(cors.Handler(cors.Options{
 				AllowedOrigins: []string{"https://*", "http://*"},
 				AllowedMethods: []string{"GET", "POST", "OPTIONS"},
+				AllowedHeaders: []string{"*"},
 			}))
 
 			if err := rest.Register(router); err != nil {
