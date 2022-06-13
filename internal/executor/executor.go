@@ -25,11 +25,11 @@ type ExecuteErrorLine struct {
 	Message string
 }
 
-var DefaultExecutor = NewInhouse(
+var defaultExecutor = NewInhouse(
 	InhouseWithTempDir(os.Getenv("TEMP_DIR")),
 	InhouseWithNumOfWorkers(4),
 )
 
-func Do(ctx context.Context, executor Executor, payload ExecutePayload) (ExecuteResult, error) {
-	return executor(ctx, payload)
+func Do(ctx context.Context, payload ExecutePayload) (ExecuteResult, error) {
+	return defaultExecutor(ctx, payload)
 }

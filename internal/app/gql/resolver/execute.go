@@ -29,7 +29,7 @@ func (r *resolver) Execute(ctx context.Context, args struct{ Payload ExecutionRe
 		Input:     args.Payload.Input,
 	}
 
-	result, err := executor.Do(ctx, executor.DefaultExecutor, payload)
+	result, err := executor.Do(ctx, payload)
 	if err != nil {
 		return ExecutionResponse{}, err
 	}
