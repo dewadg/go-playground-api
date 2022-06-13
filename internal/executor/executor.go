@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-type Executor func(ctx context.Context, payload ExecutePayload) (ExecuteResult, error)
+type executor func(ctx context.Context, payload ExecutePayload) (ExecuteResult, error)
 
 type ExecutePayload struct {
 	SessionID string
@@ -25,7 +25,7 @@ type ExecuteErrorLine struct {
 	Message string
 }
 
-var defaultExecutor = NewInhouse(
+var defaultExecutor = newInhouse(
 	InhouseWithTempDir(os.Getenv("TEMP_DIR")),
 	InhouseWithNumOfWorkers(2),
 )

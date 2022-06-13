@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewInhouse(cfgFuncs ...InhouseConfigurator) Executor {
+func newInhouse(cfgFuncs ...InhouseConfigurator) executor {
 	cfg := inhouseConfig{
 		numOfWorkers: 2,
 	}
@@ -38,7 +38,7 @@ type inhouseExecutorQueueOutput struct {
 	err    error
 }
 
-func createInhouseExecutor(cfg *inhouseConfig) Executor {
+func createInhouseExecutor(cfg *inhouseConfig) executor {
 	inboundQueue := make(chan inhouseExecutorQueueInput, cfg.numOfWorkers)
 
 	for i := 0; i < cfg.numOfWorkers; i++ {

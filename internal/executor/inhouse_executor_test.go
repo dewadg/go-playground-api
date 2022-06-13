@@ -73,7 +73,7 @@ func Test_createInhouseExecutor(t *testing.T) {
 }
 
 func Benchmark_InhouseExecutor(b *testing.B) {
-	executor := NewInhouse(
+	executor := newInhouse(
 		InhouseWithTempDir("./__tests__"),
 		InhouseWithNumOfWorkers(4),
 	)
